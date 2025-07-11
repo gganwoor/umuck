@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset = "UTF-8">
+    <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
+    <title>Play Omok / Gomoku</title>
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .board{
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .cell{
+            width: 20px;
+            height: 20px;
+            border: 1px solid #999;
+            display: inline-block;
+            box-sizing: content-box;
+            font-size: 30px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            vertical-align: top;
+        }
+        .cell:hover{
+            background-color: #eee;
+        }
+        .row-label, .column-label{
+            display: none;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        #log{
+            text-align: left;
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 3px solid #ddd;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id = "log"></div>
+    <script>
+        function logMessage(message){
+            var logDiv = document.getElementById("log");
+            var lodId = "log_" + Date.now();
+            logDiv.innerHTML = `<div id = "${logId}">${message}</div>` + logDiv.innerHTML;
+
+            setTimeout(() => {
+                var logToRemove = document.getElementById(logId);
+                if(logToRemove){
+                    logToRemove.remove();
+                }
+            }, 5000);
+        }
+    </script>
+    <div class = "board" id = "board"></div>
+    <script>
+        const SIZE = 15;
+        const boardElement = document.getElementById('board');
+        let board = initBoard();
+        let stone = '●';
+        let turn = 1;
+
+        function initBoard(){
+            let board = [];
+            for(let i = 0; i < SIZE; i++){
+                let row = [];
+                for(let j = 0; j < SIZE; j++){
+                    row.push('');
+                }
+                board.push(row);
+            }
+            return board;
+        }
+
+        function printBoard(){
+            boardElement.innerHTML = '';
+
+            let rowLabel = document.createElement('div');
+            rowLabel.className = 'row-label';
+            rowLabel.textContent = ' ';
+            boardElement.appendChild(rowLabel);
+
+            for(let i = 0; i < SIZE; i++){
+                let columnLabel = document.createElement('div');
+                columnLabel.className = 'column-label';
+                columnLabel.textContent = String.fromCharCode(65 + i);
+                boardElement.appendChild(columnLabel);
+            }
+            boardElement.appendChild(document.createElement('br'));
+
+            for(let i = 0; i < SIZE; i++){
+                let rowDiv = document.createElement('div');
+                for(let j = 0; j < SIZE; j++){
+                    let cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.textContent = board[i][j];
+                    cell.addEventListener('click', handleClick);
+                    rowDiv.appendChild(cell);
+                }
+                let rowLabel = document.createElement('div');
+                rowLabel.className = 'row-label';
+                rowLabel.textContent = i + 1;
+                boardElement.appendChild(rowLabel);
+                boardElement.appendChild(rowDiv);
+            }
+        }
+
+        function handleClick(event){
+            let row = parseInt(event.target.dataset.row);
+            let col = parseInt(event.target.dataset.col);
+
+            if(board[row][col] === ''){
+                board[row][col] = stone;
+                printBoard();
+
+                if(check(row, col)){
+                    let stonecolor = stone === '●' ? "Black" : "White";
+                    alert(`Player ${turn}(${stonecolor}) wins!`)
+                    resetGame();
+                    return;
+                }
+
+                turn = turn === 1 ? 2 : 1;
+                stone = stone === '●' ? '○' : '●';
+                logMessage(`Player ${turn}(${stone})'s turn.`);
+            }
+
+        }
+
+        function check(x, y){
+            let directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+            let color = board[x][y];
+
+            for(let [dx, dy] of directions){
+                let count = 1;
+                let nx = x + dx, ny = y + dy;
+                while(nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[nx][ny] === color){
+                    count++;
+                    nx += dx;
+                    ny += dy;
+                }
+                nx = x - dx;
+                ny = y - dy;
+                while(nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && board[nx][ny] === color){
+                    count++;
+                    nx -= dx;
+                    ny -= dy;
+                }
+
+                if(count >= 5){
+                    return true;
+                }
+            }
+
+            return false
+        }
+
+        function resetGame(){
+            board = initBoard();
+            turn = 1;
+            stone = '●'
+            printBoard();
+        }
+        printBoard();
+
+    </script>
+</body>
+</html>
